@@ -132,7 +132,50 @@ In `src/start.ts`, uncomment:
 await initializeDatabase();
 ```
 
-### 4. Restart Server
+### 4. Run Database Migrations
+
+Create the database schema by running migrations:
+
+```bash
+npm run db:migrate
+```
+
+This will create the `users` table and necessary indexes. You should see output like:
+
+```
+Sequelize CLI [Node: 20.x.x]
+
+Loaded configuration file "src/db/sequelize-config.cjs".
+Using environment "development".
+== 20250205000000-create-users-table: migrating =======
+== 20250205000000-create-users-table: migrated (0.045s)
+```
+
+### 5. Seed Sample Data (Optional)
+
+Populate the database with sample users:
+
+```bash
+npm run db:seed
+```
+
+This will insert 5 sample users into the database. You can now test the API with existing data:
+
+```bash
+# List all seeded users
+curl http://localhost:3000/api/v1/users
+
+# Get a specific seeded user
+curl http://localhost:3000/api/v1/users/550e8400-e29b-41d4-a716-446655440001
+```
+
+#### Migration Commands Reference
+
+- `npm run db:migrate` - Run all pending migrations
+- `npm run db:migrate:undo` - Rollback the last migration
+- `npm run db:seed` - Run all seeders
+
+### 6. Restart Server
 
 ```bash
 npm run dev
