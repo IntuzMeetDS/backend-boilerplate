@@ -223,6 +223,34 @@ npm run build
 - Verify DATABASE_URL in .env
 - Check firewall settings
 
+### Migration/Seeder Errors with ES Modules
+
+If you encounter errors like "module is not defined in ES module scope" when running migrations:
+
+The project uses `"type": "module"` in package.json for ES modules support. The npm scripts are configured to handle this automatically using `node -r dotenv/config`.
+
+If you still have issues, ensure your scripts in `package.json` are:
+
+```json
+{
+  "scripts": {
+    "db:migrate": "node -r dotenv/config node_modules/.bin/sequelize-cli db:migrate",
+    "db:migrate:undo": "node -r dotenv/config node_modules/.bin/sequelize-cli db:migrate:undo",
+    "db:seed": "node -r dotenv/config node_modules/.bin/sequelize-cli db:seed:all"
+  }
+}
+```
+
+Alternatively, you can set environment variables manually before running migrations:
+
+```bash
+# Load .env variables
+export $(cat .env | xargs)
+
+# Then run migrations
+npx sequelize-cli db:migrate
+```
+
 ## Development Tips
 
 ### Hot Reload

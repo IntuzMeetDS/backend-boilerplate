@@ -1,10 +1,11 @@
-require('dotenv').config();
-
 /**
  * Sequelize CLI configuration
  * This file is used by sequelize-cli for migrations and seeders
  * 
  * Note: This is a CommonJS module (.cjs) because sequelize-cli doesn't support ES modules
+ * 
+ * Environment variables are loaded via the npm scripts using: node -r dotenv/config
+ * This ensures .env file is loaded before running migrations/seeders
  */
 
 const getDatabaseConfig = () => {
