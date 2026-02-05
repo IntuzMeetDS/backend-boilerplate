@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { createServer } from './server.js';
-import { initializeDatabase } from './db/config.js';
+import { initializeDatabase, closeDatabase } from './db/config.js';
 import { parseIntSafe } from './lib/utils.js';
 
 const PORT = parseIntSafe(process.env.PORT, 3000);
@@ -11,8 +11,8 @@ const HOST = process.env.HOST || '0.0.0.0';
  */
 async function bootstrap(): Promise<void> {
     try {
-        // Initialize database connection (optional - comment out if not using DB)
-        // await initializeDatabase();
+        // Initialize database connection
+        await initializeDatabase();
 
         // Create and start server
         const server = await createServer();
@@ -36,8 +36,8 @@ const shutdown = async (signal: string): Promise<void> => {
     console.log(`\n${signal} received. Shutting down gracefully...`);
 
     try {
-        // Close database connection if initialized
-        // await closeDatabase();
+        // Close database connection
+        await closeDatabase();
         
         console.log('✅ Server closed successfully');
         process.exit(0);
