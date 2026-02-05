@@ -1,0 +1,25 @@
+{
+  "common": {
+    "success": "Success",
+    "error": "Error",
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "validationError": "Validation failed",
+    "internalError": "Internal server error"
+  },
+  "users": {
+    "created": "User created successfully",
+    "updated": "User updated successfully",
+    "deleted": "User deleted successfully",
+    "retrieved": "User retrieved successfully",
+    "listed": "Users retrieved successfully",
+    "notFound": "User not found",
+    "emailExists": "Email already exists"
+  },
+  "health": {
+    "healthy": "Server is healthy",
+    "ready": "Server is ready",
+    "live": "Server is alive"
+  }
+}

@@ -1,0 +1,388 @@
+# <%= projectName %>
+
+A minimal, production-grade backend boilerplate built with **Node.js**, **TypeScript**, and **Fastify**. Designed to be simple yet scalable, suitable for both MVP projects and enterprise applications.
+
+## Features
+
+✅ **Global Error Handling** - Centralized error management with custom error classes  
+✅ **Validation Schemas** - Fastify JSON schema validation with reusable patterns  
+✅ **Standardized Responses** - Consistent API response format  
+✅ **API Versioning** - Built-in `/api/v1` prefix with clear upgrade path  
+✅ **TypeScript** - Full type safety with strict mode  
+✅ **Database Ready** - Sequelize ORM with PostgreSQL support  
+✅ **Middleware System** - Request logging and error handling  
+✅ **Environment Config** - Comprehensive `.env` support  
+<% if (redis) { %>✅ **Redis Integration** - Caching and session storage ready  
+<% } %>
+
+## Tech Stack
+
+- **Runtime**: Node.js 20+
+- **Framework**: Fastify 4.x
+- **Language**: TypeScript 5.x
+- **Database**: PostgreSQL (via Sequelize)
+- **Validation**: Fastify JSON Schema
+- **Logging**: Pino (via Fastify)
+<% if (redis) { %>- **Cache**: Redis (via ioredis)
+<% } %>
+
+## Quick Start
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure Environment
+
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+### 3. Run Development Server
+
+```bash
+npm run dev
+```
+
+The server will start at `http://localhost:3000`
+
+### 4. Test the API
+
+```bash
+# Health check
+curl http://localhost:3000/api/v1/health
+
+# Root endpoint
+curl http://localhost:3000
+```
+
+## Project Structure
+
+```
+src/
+├── start.ts                 # Application entry point
+├── server.ts                # Fastify server setup
+├── routes/                  # API routes
+│   ├── index.ts             # Route registration
+│   ├── health.routes.ts     # Health check endpoints
+│   └── users.routes.ts      # User CRUD example
+├── schemas/                 # Validation schemas
+│   ├── common.schemas.ts    # Reusable schemas
+│   └── users.schemas.ts     # User validations
+├── controllers/             # Business logic (optional)
+│   └── users.controller.ts  # User controller example
+├── middlewares/             # Global middlewares
+│   ├── index.ts
+│   ├── errorHandler.ts      # Error handling
+│   └── requestLogger.ts     # Request logging
+├── lib/                     # Core utilities
+│   ├── errors.ts            # Custom error classes
+│   ├── responses.ts         # Response builders
+│   ├── constants.ts         # App constants
+│   ├── types.ts             # TypeScript types
+│   └── utils.ts             # Helper functions
+├── db/                      # Database layer
+│   ├── config.ts            # Sequelize config
+│   ├── models/
+│   │   ├── index.ts         # Model registry
+│   │   └── User.model.ts    # User model example
+│   ├── migrations/          # DB migrations
+│   └── seeders/             # Seed data<% if (redis) { %>
+├── services/                # External services
+│   └── redis/               # Redis client setup<% } %>
+└── assets/                  # Static assets
+    ├── locales/             # i18n files
+    └── templates/           # Email templates
+```
+
+## Available Scripts
+
+```bash
+# Development
+npm run dev          # Start dev server with hot reload
+
+# Production
+npm run build        # Compile TypeScript
+npm start            # Run compiled code
+
+# Code Quality
+npm run lint         # Run ESLint
+npm run format       # Format with Prettier
+
+# Database
+npm run db:migrate   # Run migrations
+npm run db:seed      # Run seeders
+```
+
+## API Endpoints
+
+### Health Check
+
+```
+GET /api/v1/health       # Main health check
+GET /api/v1/health/ready # Readiness probe
+GET /api/v1/health/live  # Liveness probe
+```
+
+### Users (Example)
+
+```
+POST   /api/v1/users     # Create user
+GET    /api/v1/users     # List users (paginated)
+GET    /api/v1/users/:id # Get user by ID
+PUT    /api/v1/users/:id # Update user
+DELETE /api/v1/users/:id # Delete user
+```
+
+## Validation Example
+
+All endpoints use Fastify JSON schema validation:
+
+```typescript
+// schemas/users.schemas.ts
+export const createUserSchema: FastifySchema = {
+  body: {
+    type: 'object',
+    required: ['email', 'name'],
+    properties: {
+      email: { type: 'string', format: 'email' },
+      name: { type: 'string', minLength: 2, maxLength: 100 },
+      age: { type: 'number', minimum: 0, maximum: 150 }
+    }
+  }
+};
+```
+
+## Error Handling
+
+Custom error classes for common scenarios:
+
+```typescript
+import { NotFoundError, BadRequestError } from './lib/errors.js';
+
+// Throw errors anywhere
+throw new NotFoundError('User not found');
+throw new BadRequestError('Invalid email format');
+
+// Automatically handled by global error middleware
+```
+
+## Response Format
+
+All responses follow a standardized format:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Success",
+  "data": { ... },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+## Database Setup
+
+### Using DATABASE_URL (Recommended)
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+```
+
+### Using Individual Parameters
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=myapp
+DB_USER=postgres
+DB_PASSWORD=password
+```
+
+### Running Migrations
+
+```bash
+npm run db:migrate
+```
+<% if (redis) { %>
+## Redis Setup
+
+Configure Redis connection in `.env`:
+
+```env
+REDIS_URL=redis://localhost:6379
+# Or individual parameters
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+```
+<% } %>
+## Adding New Features
+
+### 1. Add a New Route
+
+```typescript
+// src/routes/posts.routes.ts
+export async function postRoutes(server: FastifyInstance) {
+  server.get('/', async (req, reply) => {
+    return ApiResponse.success([], 'Posts retrieved');
+  });
+}
+
+// src/routes/index.ts
+await server.register(postRoutes, { prefix: '/api/v1/posts' });
+```
+
+### 2. Add Validation Schema
+
+```typescript
+// src/schemas/posts.schemas.ts
+export const createPostSchema: FastifySchema = {
+  body: {
+    type: 'object',
+    required: ['title', 'content'],
+    properties: {
+      title: { type: 'string', minLength: 1 },
+      content: { type: 'string', minLength: 1 }
+    }
+  }
+};
+```
+
+### 3. Add Controller (Optional)
+
+Use controllers when route handlers become complex (50+ lines):
+
+```typescript
+// src/controllers/posts.controller.ts
+export class PostsController {
+  static async create(req: FastifyRequest, reply: FastifyReply) {
+    // Complex business logic here
+  }
+}
+```
+
+## API Versioning
+
+### Current: v1
+
+All routes use `/api/v1` prefix:
+
+```typescript
+await server.register(userRoutes, { prefix: '/api/v1/users' });
+```
+
+### Adding v2
+
+**Option 1: New route files**
+
+```typescript
+// src/routes/users.v2.routes.ts
+export async function userRoutesV2(server: FastifyInstance) { ... }
+
+// src/routes/index.ts
+await server.register(userRoutes, { prefix: '/api/v1/users' });
+await server.register(userRoutesV2, { prefix: '/api/v2/users' });
+```
+
+**Option 2: Folder structure**
+
+```
+routes/
+  v1/
+    users.routes.ts
+  v2/
+    users.routes.ts
+```
+
+## Environment Variables
+
+See `.env.example` for all available configuration options.
+
+### Required
+
+- `NODE_ENV` - Environment (development/production)
+- `PORT` - Server port (default: 3000)
+
+### Optional
+
+- `DATABASE_URL` - PostgreSQL connection string<% if (redis) { %>
+- `REDIS_URL` - Redis connection string<% } %>
+- `JWT_SECRET` - JWT signing secret
+- `LOG_LEVEL` - Logging level (info/debug/error)
+
+## Production Deployment
+
+### 1. Build
+
+```bash
+npm run build
+```
+
+### 2. Set Environment
+
+```bash
+export NODE_ENV=production
+export DATABASE_URL=your-production-db-url<% if (redis) { %>
+export REDIS_URL=your-production-redis-url<% } %>
+```
+
+### 3. Run
+
+```bash
+npm start
+```
+
+### Docker (Optional)
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY dist ./dist
+CMD ["node", "dist/start.js"]
+```
+
+## Best Practices
+
+### When to Use Controllers
+
+- Keep simple logic inline in routes
+- Extract to controller when handler > 50 lines
+- Use controllers for complex business logic
+
+### When to Add Service Layer
+
+```
+routes → controllers → services → models
+```
+
+Add services when:
+- Multiple controllers share logic
+- Complex data transformations needed
+- External API integrations required
+
+### Error Handling
+
+- Use custom error classes (`NotFoundError`, `BadRequestError`, etc.)
+- Let global error handler manage responses
+- Log errors with context
+
+### Validation
+
+- Define schemas in `schemas/` folder
+- Reuse common patterns from `common.schemas.ts`
+- Validate at route level, not in controllers
+
+## License
+
+MIT
+
+## Support
+
+For issues and questions, please open a GitHub issue.

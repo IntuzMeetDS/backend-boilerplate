@@ -1,0 +1,57 @@
+/**
+ * Shared TypeScript types and interfaces
+ */
+
+/**
+ * Pagination query parameters
+ */
+export interface PaginationQuery {
+    page?: number;
+    limit?: number;
+}
+
+/**
+ * Pagination metadata
+ */
+export interface PaginationMeta {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
+/**
+ * Generic paginated response
+ */
+export interface PaginatedResponse<T> {
+    data: T[];
+    meta: PaginationMeta;
+}
+
+/**
+ * UUID parameter
+ */
+export interface UUIDParam {
+    id: string;
+}
+
+/**
+ * Environment variables type
+ */
+export interface EnvConfig {
+    NODE_ENV: 'development' | 'production' | 'test';
+    PORT: number;
+    HOST: string;
+    DATABASE_URL?: string;
+    DB_HOST?: string;
+    DB_PORT?: number;
+    DB_NAME?: string;
+    DB_USER?: string;
+    DB_PASSWORD?: string;
+    DB_SSL?: boolean;
+    REDIS_URL?: string;
+    JWT_SECRET?: string;
+    JWT_EXPIRES_IN?: string;
+    AUTH_SECRET?: string;
+    LOG_LEVEL?: string;
+}

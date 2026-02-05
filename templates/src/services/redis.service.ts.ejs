@@ -1,0 +1,160 @@
+import Redis from 'ioredis';
+
+/**
+ * Redis Service
+ * 
+ * Handles caching and session management using Redis.
+ * Provides a clean interface for common Redis operations.
+ */
+export class RedisService {
+  private client: Redis;
+
+  constructor() {
+    this.client = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD || undefined,
+      db: parseInt(process.env.REDIS_DB || '0'),
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      }
+    });
+
+    this.client.on('error', (error) => {
+      console.error('Redis connection error:', error);
+    });
+
+    this.client.on('connect', () => {
+      console.log('✅ Redis connected');
+    });
+  }
+
+  /**
+   * Get value from cache
+   */
+  async get<T>(key: string): Promise<T | null> {
+    try {
+      const value = await this.client.get(key);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      console.error(`Redis GET error for key ${key}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Set value in cache with optional TTL (in seconds)
+   */
+  async set(key: string, value: any, ttl?: number): Promise<boolean> {
+    try {
+      const serialized = JSON.stringify(value);
+      if (ttl) {
+        await this.client.setex(key, ttl, serialized);
+      } else {
+        await this.client.set(key, serialized);
+      }
+      return true;
+    } catch (error) {
+      console.error(`Redis SET error for key ${key}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Delete key from cache
+   */
+  async delete(key: string): Promise<boolean> {
+    try {
+      await this.client.del(key);
+      return true;
+    } catch (error) {
+      console.error(`Redis DELETE error for key ${key}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if key exists
+   */
+  async exists(key: string): Promise<boolean> {
+    try {
+      const result = await this.client.exists(key);
+      return result === 1;
+    } catch (error) {
+      console.error(`Redis EXISTS error for key ${key}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Set expiration on existing key
+   */
+  async expire(key: string, seconds: number): Promise<boolean> {
+    try {
+      await this.client.expire(key, seconds);
+      return true;
+    } catch (error) {
+      console.error(`Redis EXPIRE error for key ${key}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Increment counter
+   */
+  async increment(key: string): Promise<number> {
+    try {
+      return await this.client.incr(key);
+    } catch (error) {
+      console.error(`Redis INCR error for key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get multiple keys at once
+   */
+  async mget<T>(keys: string[]): Promise<(T | null)[]> {
+    try {
+      const values = await this.client.mget(...keys);
+      return values.map(v => v ? JSON.parse(v) : null);
+    } catch (error) {
+      console.error('Redis MGET error:', error);
+      return keys.map(() => null);
+    }
+  }
+
+  /**
+   * Clear all keys matching pattern
+   */
+  async clearPattern(pattern: string): Promise<number> {
+    try {
+      const keys = await this.client.keys(pattern);
+      if (keys.length > 0) {
+        return await this.client.del(...keys);
+      }
+      return 0;
+    } catch (error) {
+      console.error(`Redis CLEAR PATTERN error for ${pattern}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Close Redis connection
+   */
+  async disconnect(): Promise<void> {
+    await this.client.quit();
+  }
+
+  /**
+   * Get raw Redis client for advanced operations
+   */
+  getClient(): Redis {
+    return this.client;
+  }
+}
+
+// Export singleton instance
+export const redisService = new RedisService();
