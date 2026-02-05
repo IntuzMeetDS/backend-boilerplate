@@ -1,9 +1,11 @@
 {
-  "name": "create-backend-boilerplate",
+  "name": "backend-boilerplate",
   "version": "1.0.0",
   "description": "CLI tool to scaffold a minimal, production-ready Fastify + TypeScript + Sequelize backend boilerplate",
   "type": "module",
-  "bin": "bin/cli.js",
+  "bin": {
+    "backend-boilerplate": "bin/cli.js"
+  },
   "keywords": [
     "fastify",
     "typescript",

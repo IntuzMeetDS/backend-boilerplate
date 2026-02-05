@@ -1,11 +1,11 @@
-# create-backend-boilerplate
+# backend-boilerplate
 
 CLI tool to scaffold a minimal, production-ready Fastify + TypeScript + Sequelize backend boilerplate.
 
 ## Usage
 
 ```bash
-npx create-backend-boilerplate
+npx backend-boilerplate
 ```
 
 Or with npm:
@@ -48,12 +48,12 @@ During setup, you can choose to include:
 ```bash
 # Clone and link locally
 git clone <repo>
-cd create-backend-boilerplate
+cd backend-boilerplate
 npm install
 npm link
 
 # Use it
-npx create-backend-boilerplate
+npx backend-boilerplate
 ```
 
 ## License

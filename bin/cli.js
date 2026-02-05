@@ -19,7 +19,7 @@ if (major < MIN_NODE_MAJOR) {
 const args = process.argv.slice(2);
 if (args.length > 0) {
   console.log('\x1b[33m⚠️  Note: Project name should be provided through the interactive prompt.\x1b[0m');
-  console.log('\x1b[33m   Run without arguments: npx create-backend-boilerplate\x1b[0m\n');
+  console.log('\x1b[33m   Run without arguments: npx backend-boilerplate\x1b[0m\n');
 }
 
 // Import and run main function
