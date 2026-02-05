@@ -18,26 +18,10 @@ export async function userRoutes(server: FastifyInstance): Promise<void> {
     /**
      * POST /users
      * Create a new user
-     * 
-     * Example of inline handler for simple logic
      */
     server.post('/', {
         schema: createUserSchema,
-        handler: async (request: FastifyRequest<{ Body: { email: string; name: string; age?: number } }>, reply: FastifyReply) => {
-            const userData = request.body;
-
-            // TODO: Replace with actual database creation
-            // Example: const user = await User.create(userData);
-
-            // Mock created user
-            const user = {
-                id: '550e8400-e29b-41d4-a716-446655440000',
-                ...userData,
-                createdAt: new Date().toISOString(),
-            };
-
-            reply.status(201).send(ApiResponse.created(user, 'User created successfully'));
-        },
+        handler: UsersController.create,
     });
 
     /**

@@ -55,3 +55,14 @@ export interface EnvConfig {
     AUTH_SECRET?: string;
     LOG_LEVEL?: string;
 }
+
+/**
+ * Query interface for filtering, sorting, and pagination
+ */
+export interface IRetrieveQuery {
+    page?: number;
+    size?: number;
+    sort?: string | number | Array<string | object> | object;
+    attributes?: string | number | Array<string | object> | object;
+    [key: string]: any;
+}

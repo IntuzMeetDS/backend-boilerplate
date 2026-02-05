@@ -1,5 +1,6 @@
 import { getDatabase } from '../config.js';
 import { initUserModel, User } from './User.model.js';
+import { BaseModel } from './Base.model.js';
 
 /**
  * Model registry
@@ -18,6 +19,11 @@ const UserModel = initUserModel(db);
 export const models = {
     User: UserModel,
 };
+
+/**
+ * Export BaseModel for extending in new models
+ */
+export { BaseModel };
 
 /**
  * Export Sequelize instance for direct access if needed

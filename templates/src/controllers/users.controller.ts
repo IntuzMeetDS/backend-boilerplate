@@ -1,79 +1,115 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { ApiResponse } from '../lib/responses.js';
 import { NotFoundError } from '../lib/errors.js';
-import { UUIDParam, PaginationQuery } from '../lib/types.js';
+import { UUIDParam, IRetrieveQuery } from '../lib/types.js';
+import { models } from '../db/models/index.js';
 
 /**
  * Users controller
  * 
  * Handles business logic for user-related operations
- * Use controllers when route handlers become complex (50+ lines)
+ * Demonstrates BaseModel features: filtering, sorting, pagination
+ * 
+ * Query examples:
+ * - GET /users?page=0&size=10 (pagination)
+ * - GET /users?status__is=1 (filter by status)
+ * - GET /users?name__con=john (search by name)
+ * - GET /users?sort=name|created_at- (sort by name asc, created_at desc)
+ * - GET /users?attributes=id|name|email (select specific fields)
  */
 export class UsersController {
     /**
      * GET /users/:id
-     * Get user by ID
+     * Get user by ID with optional attribute selection
+     * 
+     * Query examples:
+     * - /users/:id
+     * - /users/:id?attributes=id|name|email
      */
     static async getById(
-        request: FastifyRequest<{ Params: UUIDParam }>,
+        request: FastifyRequest<{ 
+            Params: UUIDParam;
+            Querystring: IRetrieveQuery;
+        }>,
         reply: FastifyReply
     ): Promise<void> {
         const { id } = request.params;
+        const query = request.query;
 
-        // TODO: Replace with actual database query
-        // Example: const user = await User.findByPk(id);
+        // Parse filters without pagination
+        const filters = models.User.parseFilters(query, false);
         
-        // Mock data for example
-        const user = {
-            id,
-            email: 'user@example.com',
-            name: 'John Doe',
-            age: 30,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
+        const user = await models.User.findByPk(id, filters);
 
         if (!user) {
             throw new NotFoundError('User not found');
         }
+
+        // Sanitize sensitive data
+        user.sanitize();
 
         reply.send(ApiResponse.success(user, 'User retrieved successfully'));
     }
 
     /**
      * GET /users
-     * List users with pagination
+     * List users with advanced filtering, sorting, and pagination
+     * 
+     * Supported query parameters:
+     * - page: Page number (0-indexed)
+     * - size: Items per page
+     * - sort: Sort fields (e.g., name|created_at-)
+     * - attributes: Select specific fields (e.g., id|name|email)
+     * - status__is: Filter by status
+     * - name__con: Search by name (contains)
+     * - email__sw: Filter by email (starts with)
+     * - age__gte: Filter by age (greater than or equal)
+     * - age__lte: Filter by age (less than or equal)
+     * - created_at__is: Filter by creation date
      */
     static async list(
-        request: FastifyRequest<{ Querystring: PaginationQuery }>,
+        request: FastifyRequest<{ Querystring: IRetrieveQuery }>,
         reply: FastifyReply
     ): Promise<void> {
-        const { page = 1, limit = 20 } = request.query;
+        const query = request.query;
+        
+        // Parse filters with pagination enabled
+        const filters = models.User.parseFilters(query, true);
+        
+        // Execute query with count
+        const { rows: users, count } = await models.User.findAndCountAll(filters);
+        
+        // Sanitize sensitive data from each user
+        users.forEach(user => user.sanitize());
+        
+        // Calculate pagination metadata
+        const page = Number(query.page) || 0;
+        const size = Number(query.size) || 20;
+        const totalPages = Math.ceil(count / size);
 
-        // TODO: Replace with actual database query
-        // Example: const { rows, count } = await User.findAndCountAll({ limit, offset: (page - 1) * limit });
+        reply.send(ApiResponse.paginated(
+            users, 
+            count, 
+            page + 1, // ApiResponse expects 1-indexed page
+            size, 
+            'Users retrieved successfully'
+        ));
+    }
 
-        // Mock data for example
-        const users = [
-            {
-                id: '550e8400-e29b-41d4-a716-446655440000',
-                email: 'user1@example.com',
-                name: 'John Doe',
-                age: 30,
-                createdAt: new Date().toISOString(),
-            },
-            {
-                id: '550e8400-e29b-41d4-a716-446655440001',
-                email: 'user2@example.com',
-                name: 'Jane Smith',
-                age: 25,
-                createdAt: new Date().toISOString(),
-            },
-        ];
-
-        const total = 50; // Mock total count
-
-        reply.send(ApiResponse.paginated(users, total, page, limit, 'Users retrieved successfully'));
+    /**
+     * POST /users
+     * Create new user
+     */
+    static async create(
+        request: FastifyRequest<{ Body: { email: string; name: string; age?: number } }>,
+        reply: FastifyReply
+    ): Promise<void> {
+        const user = await models.User.create(request.body);
+        
+        // Sanitize sensitive data
+        user.sanitize();
+        
+        reply.status(201).send(ApiResponse.success(user, 'User created successfully'));
     }
 
     /**
@@ -87,21 +123,23 @@ export class UsersController {
         const { id } = request.params;
         const updateData = request.body;
 
-        // TODO: Replace with actual database update
-        // Example: await User.update(updateData, { where: { id } });
+        const user = await models.User.findByPk(id);
 
-        const updatedUser = {
-            id,
-            ...updateData,
-            updatedAt: new Date().toISOString(),
-        };
+        if (!user) {
+            throw new NotFoundError('User not found');
+        }
 
-        reply.send(ApiResponse.success(updatedUser, 'User updated successfully'));
+        await user.update(updateData);
+        
+        // Sanitize sensitive data
+        user.sanitize();
+
+        reply.send(ApiResponse.success(user, 'User updated successfully'));
     }
 
     /**
      * DELETE /users/:id
-     * Delete user
+     * Delete user (soft delete)
      */
     static async delete(
         request: FastifyRequest<{ Params: UUIDParam }>,
@@ -109,8 +147,14 @@ export class UsersController {
     ): Promise<void> {
         const { id } = request.params;
 
-        // TODO: Replace with actual database deletion
-        // Example: await User.destroy({ where: { id } });
+        const user = await models.User.findByPk(id);
+
+        if (!user) {
+            throw new NotFoundError('User not found');
+        }
+
+        // Soft delete (sets deleted_at timestamp)
+        await user.destroy();
 
         reply.send(ApiResponse.success({ id }, 'User deleted successfully'));
     }

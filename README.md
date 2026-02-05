@@ -25,6 +25,7 @@ The CLI will interactively prompt you for:
 - **Fastify** - High-performance web framework
 - **TypeScript** - Type safety and modern JavaScript
 - **Sequelize** - PostgreSQL ORM with migrations
+- **BaseModel** - Advanced filtering, sorting, and pagination out of the box
 - **Global Error Handling** - Centralized error management
 - **Validation Schemas** - Fastify JSON schema validation
 - **Standardized Responses** - Consistent API response format
