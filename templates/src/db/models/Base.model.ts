@@ -121,11 +121,15 @@ export class BaseModel<
                 }
 
                 if (list) {
-                    // Pagination: (page - 1) * pageSize
-                    if (key === 'page') filters.offset = +query.page * +query.size;
-                    else if (key === 'size') {
+                    // Pagination: Only apply if BOTH page and size are provided
+                    if (key === 'page' && query.page !== undefined && query.size !== undefined) {
+                        filters.offset = +query.page * +query.size;
+                    } else if (key === 'size' && query.page !== undefined && query.size !== undefined) {
                         filters.limit = +query.size;
-                    } else if (query[key]) {
+                    }
+                    
+                    // Apply filters regardless of pagination
+                    if (query[key] && key !== 'page' && key !== 'size') {
                         if (key.includes('__in')) {
                             const base_key = key.replace('__in', '');
                             if (this.filterable_attributes.includes(base_key)) {
@@ -238,11 +242,15 @@ export class BaseModel<
                 }
 
                 if (list) {
-                    if (key === 'page') {
+                    // Pagination: Only apply if BOTH page and size are provided
+                    if (key === 'page' && query.page !== undefined && query.size !== undefined) {
                         filters.offset = +query.page * +query.size;
-                    } else if (key === 'size') {
+                    } else if (key === 'size' && query.page !== undefined && query.size !== undefined) {
                         filters.limit = +query.size;
-                    } else if (query[key]) {
+                    }
+                    
+                    // Apply filters regardless of pagination
+                    if (query[key] && key !== 'page' && key !== 'size') {
                         // Handle filters for included models
                         if (key.startsWith('include_')) {
                             const associationName = key.substring('include_'.length);

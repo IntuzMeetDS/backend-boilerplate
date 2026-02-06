@@ -21,3 +21,4 @@ export async function registerMiddlewares(server: FastifyInstance): Promise<void
 
 export { errorHandlerMiddleware } from './errorHandler.js';
 export { requestLoggerMiddleware } from './requestLogger.js';
+export { authenticateMiddleware, optionalAuthMiddleware } from './auth.js';

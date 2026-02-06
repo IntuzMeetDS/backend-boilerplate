@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import {
     createUserSchema,
     getUserSchema,
@@ -6,8 +6,8 @@ import {
     updateUserSchema,
     deleteUserSchema,
 } from '../schemas/users.schemas.js';
-import { ApiResponse } from '../lib/responses.js';
 import { UsersController } from '../controllers/users.controller.js';
+import { authenticateMiddleware } from '../middlewares/index.js';
 
 /**
  * User routes
@@ -21,6 +21,7 @@ export async function userRoutes(server: FastifyInstance): Promise<void> {
      */
     server.post('/', {
         schema: createUserSchema,
+        preHandler: [authenticateMiddleware],
         handler: UsersController.create,
     });
 
@@ -32,6 +33,7 @@ export async function userRoutes(server: FastifyInstance): Promise<void> {
      */
     server.get('/:id', {
         schema: getUserSchema,
+        preHandler: [authenticateMiddleware],
         handler: UsersController.getById,
     });
 
@@ -43,6 +45,7 @@ export async function userRoutes(server: FastifyInstance): Promise<void> {
      */
     server.get('/', {
         schema: listUsersSchema,
+        preHandler: [authenticateMiddleware],
         handler: UsersController.list,
     });
 
@@ -52,6 +55,7 @@ export async function userRoutes(server: FastifyInstance): Promise<void> {
      */
     server.put('/:id', {
         schema: updateUserSchema,
+        preHandler: [authenticateMiddleware],
         handler: UsersController.update,
     });
 
@@ -61,6 +65,7 @@ export async function userRoutes(server: FastifyInstance): Promise<void> {
      */
     server.delete('/:id', {
         schema: deleteUserSchema,
+        preHandler: [authenticateMiddleware],
         handler: UsersController.delete,
     });
 }

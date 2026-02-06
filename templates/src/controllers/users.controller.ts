@@ -11,8 +11,10 @@ import { models } from '../db/models/index.js';
  * Demonstrates BaseModel features: filtering, sorting, pagination
  * 
  * Query examples:
- * - GET /users?page=0&size=10 (pagination)
- * - GET /users?status__is=1 (filter by status)
+ * - GET /users (returns all users, no pagination)
+ * - GET /users?page=0&size=10 (returns paginated results with meta)
+ * - GET /users?status__is=1 (filter all users by status)
+ * - GET /users?page=0&size=10&status__is=1 (paginated + filtered)
  * - GET /users?name__con=john (search by name)
  * - GET /users?sort=name|created_at- (sort by name asc, created_at desc)
  * - GET /users?attributes=id|name|email (select specific fields)
@@ -53,11 +55,15 @@ export class UsersController {
 
     /**
      * GET /users
-     * List users with advanced filtering, sorting, and pagination
+     * List users with advanced filtering, sorting, and optional pagination
+     * 
+     * Pagination behavior:
+     * - If BOTH page and size are provided: returns paginated results with meta
+     * - If neither is provided: returns all records without meta
      * 
      * Supported query parameters:
-     * - page: Page number (0-indexed)
-     * - size: Items per page
+     * - page: Page number (0-indexed, optional)
+     * - size: Items per page (optional)
      * - sort: Sort fields (e.g., name|created_at-)
      * - attributes: Select specific fields (e.g., id|name|email)
      * - status__is: Filter by status
@@ -82,18 +88,23 @@ export class UsersController {
         // Sanitize sensitive data from each user
         users.forEach(user => user.sanitize());
         
-        // Calculate pagination metadata
-        const page = Number(query.page) || 0;
-        const size = Number(query.size) || 20;
-        const totalPages = Math.ceil(count / size);
-
-        reply.send(ApiResponse.paginated(
-            users, 
-            count, 
-            page + 1, // ApiResponse expects 1-indexed page
-            size, 
-            'Users retrieved successfully'
-        ));
+        // Check if pagination was requested
+        const hasPagination = query.page !== undefined && query.size !== undefined;
+        
+        if (hasPagination) {
+            const page = Number(query.page);
+            const size = Number(query.size);
+            const meta = {
+                page: page + 1, // Return 1-indexed page for API response
+                limit: size,
+                total: count,
+                totalPages: Math.ceil(count / size),
+            };
+            reply.send(ApiResponse.success(users, 'Users retrieved successfully', 200, meta));
+        } else {
+            // No pagination - return all records
+            reply.send(ApiResponse.success(users, 'Users retrieved successfully'));
+        }
     }
 
     /**

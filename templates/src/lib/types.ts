@@ -66,3 +66,24 @@ export interface IRetrieveQuery {
     attributes?: string | number | Array<string | object> | object;
     [key: string]: any;
 }
+
+/**
+ * Authenticated user attached to request after JWT validation
+ */
+export interface AuthenticatedUser {
+    id: string;
+    email: string;
+    name: string;
+    status: number;
+    created_at: Date;
+    updated_at: Date;
+}
+
+/**
+ * Extend Fastify request to include authenticated user
+ */
+declare module 'fastify' {
+    interface FastifyRequest {
+        user?: AuthenticatedUser;
+    }
+}
