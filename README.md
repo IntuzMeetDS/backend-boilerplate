@@ -1,5 +1,5 @@
 # backend-boilerplate
-
+Test
 CLI tool to scaffold a minimal, production-ready Fastify + TypeScript + Sequelize backend boilerplate.
 
 ## Usage
